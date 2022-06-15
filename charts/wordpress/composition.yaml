@@ -15,7 +15,7 @@ spec:
     # Create external database for Wordpress to use. This requires the DB 
     # server to be available. The DB server is provisioned via the database 
     # claim.
-    - base:
+    #- base:
 
 
     ### Deploy Wordpress chart securely connected to external database.
