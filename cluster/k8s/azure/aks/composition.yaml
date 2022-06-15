@@ -16,6 +16,7 @@ spec:
         spec:
           forProvider:
             privateClusterEnabled: true
+            privateClusterPublicFqdnEnabled: true
             location: East US 2
             #kubernetesVersion: "" #If remarked out or ommitted, uses regions's default Kubernetes version. 
             defaultNodePool:
