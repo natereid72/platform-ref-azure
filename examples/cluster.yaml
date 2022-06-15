@@ -1,4 +1,4 @@
-apiVersion: azure.platformref.crossplane.io/v1alpha1
+apiVersion: platformref.crossplane.io/v1alpha1
 kind: Cluster
 metadata:
   name: nate-platform-ref-azure
@@ -11,4 +11,5 @@ spec:
     charts:
       wordpress:
         version: "13.1.15"
+  cloud: azure
 

@@ -1,7 +1,7 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
-  name: xclusters.azure.platformref.crossplane.io
+  name: xclusters.platformref.crossplane.io
   annotations:
     upbound.io/ui-schema: |-
       ---
@@ -69,7 +69,7 @@ metadata:
           validation:
           - required: false
 spec:
-  group: azure.platformref.crossplane.io
+  group: platformref.crossplane.io
   names:
     kind: XCluster
     plural: xclusters
@@ -90,6 +90,9 @@ spec:
               id:
                 type: string
                 description: ID of this Cluster that other objects will use to refer to it.
+              cloud:
+                type: string
+                description: Cloud to provision to.
               parameters:
                 type: object
                 description: Cluster configuration parameters.

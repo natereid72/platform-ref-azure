@@ -1,7 +1,7 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xaks.k8s.platformref.crossplane.io
+  name: azure.xk8s.platformref.crossplane.io
   labels:
     cloud: azure
 spec:
@@ -20,8 +20,8 @@ spec:
             #kubernetesVersion: "" #If remarked out or ommitted, uses regions's default Kubernetes version. 
             defaultNodePool:
               - name: default
-                nodeCount: #patched
-                vmSize: #patched
+                nodeCount: 1 #patched
+                vmSize: Standard_B2s #patched
             identity:
               - type: "SystemAssigned"
       # Patches take values from the XR and compose them into the MR. Patches assign values to the 
