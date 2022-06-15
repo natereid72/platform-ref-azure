@@ -32,7 +32,6 @@ spec:
     - base:
         apiVersion: charts.azure.platformref.crossplane.io/v1alpha1
         kind: XPrometheus
-      name: clusterPrometheus
       patches:
         - fromFieldPath: spec.id
           toFieldPath: spec.providerConfigRef.name
