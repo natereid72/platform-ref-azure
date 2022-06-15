@@ -1,15 +1,14 @@
-# Azure Reference Platform for Kubernetes + Data Services
+# Azure Reference Platform for Kubernetes + Secure Data Services
 
 This repository contains a reference Azure Platform
 [Configuration](https://crossplane.io/docs/v1.6/getting-started/create-configuration.html)
 for use as a starting point in [Upbound Cloud](https://upbound.io) or
 [Upbound Universal Crossplane (UXP)](https://www.upbound.io/uxp/) to build,
-run and operate your own internal cloud platform and offer a self-service
-console and API to your internal teams. It provides platform APIs to provision
-fully configured Azure AKS clusters, with secure networking, and stateful cloud
-services (Azure Database for PostgreSQL) designed to securely connect to the nodes in each AKS cluster --
-all composed using cloud service primitives from the [Crossplane Azure
-Provider](https://doc.crds.dev/github.com/crossplane/provider-azure). App
+run, and operate your own internal cloud. It provides platform APIs to provision
+fully configured Azure AKS clusters, with secure networking and stateful cloud
+services (Azure Database for MariaDB) designed to securely connect to the nodes in the AKS cluster, with an application (Wordpress) consuming the infrastructure --
+all composed using cloud service primitives from the [Crossplane Jet Azure
+Provider](https://doc.crds.dev/github.com/crossplane-contrib/provider-jet-azure). App
 deployments can securely connect to the infrastructure they need using secrets
 distributed directly to the app namespace.
 
@@ -18,10 +17,10 @@ distributed directly to the app namespace.
 * [Upbound Cloud](#upbound-cloud)
 * [Build Your Own Internal Cloud Platform](#build-your-own-internal-cloud-platform)
 * [Quick Start](#quick-start)
-* [Platform Ops/SRE: Run your own internal cloud platform](#platform-opssre-run-your-own-internal-cloud-platform)
-  * [App Dev/Ops: Consume the infrastructure you need using kubectl](#app-devops-consume-the-infrastructure-you-need-using-kubectl)
-  * [APIs in this Configuration](#apis-in-this-configuration)
-* [Customize for your Organization](#customize-for-your-organization)
+  * [Create Upbound Cloud Managed UXP Control Plane](#Create-Upbound-Cloud-Managed-UXP-Control-Plane)
+  * [Install the Platform Configuration](#Install-the-Platform-Configuration)
+  * [Provision Resources](#Provision-Resources)
+  * [Cleanup](#Cleanup)
 * [Learn More](#learn-more)
 
 ## Upbound Cloud
@@ -46,7 +45,7 @@ of your organization.
 
 App teams can provision the infrastructure they need with a single YAML file
 alongside `Deployments` and `Services` using existing tools and workflows
-including tools like `kubectl` and Flux to consume your platform's self-service
+including tools like `kubectl` and gitops platforms to consume your platform's self-service
 APIs.
 
 The Platform `Configuration` defines the self-service APIs and
@@ -54,134 +53,98 @@ classes-of-service for each API:
 
 * `CompositeResourceDefinitions` (XRDs) define the platform's self-service
    APIs - e.g. `CompositePostgreSQLInstance`.
-* `Compositions` offer the classes-of-service supported for each self-service
-   API - e.g. `Standard`, `Performance`, `Replicated`.
-
-![Upbound Overview](docs/media/compose.png)
+* `Compositions` offer the composed services supported for each self-service API.
 
 Crossplane `Providers` include the cloud service primitives (AWS, Azure, GCP,
-Alibaba) used in a `Composition`.
+etc.) used in a `Composition`.
 
 Learn more about `Composition` in the [Crossplane
 Docs](https://crossplane.io/docs/v1.6/concepts/composition.html).
 
 ## Quick Start
 
-### Platform Ops/SRE: Run your own internal cloud platform
+At a high-level, this reference platform results in the following architecture.
 
-There are two ways to run Universal Crossplane:
+![](docs/media/ref-architecture.png)
 
-1. Hosted on Upbound Cloud
-1. Self-hosted on any Kubernetes cluster.
+![](docs/media/2022-05-12-10-19-37.png)
 
-To provision the Azure Reference platform, you can pick the option that is best for you. 
+Three Claims create a Resource Group, Virtual Network with Service Endpoint for Azure Database Service, three Subnets, AKS Cluster attached to the Virtual Network, Azure Database Service with MariaDB engine, Helm install of Prometheus, Helm install of mutlipls Wordpress instances that create dedicated external database instances in the Azure DB instance, and an ALB per Wordpress instance.
 
-We'll go through each option in the next sections.
+The Database Services could be consolidated with the EKS Claim, but it has been kept separate to show modularity in applying Compositions.
 
-### Upbound Cloud Hosted UXP Control Plane
+In this quick start, you will install Upbound UXP, and use a Crossplane Configuration Package to deploy this configutation in your Azure cloud instance.
 
-Hosted Control planes are run on Upbound's cloud infrastructure and provide a restricted
-Kubernetes API endpoint that can be accessed via `kubectl` or CI/CD systems.
+### Create Upbound Cloud Managed UXP Control Plane
 
-#### Create a free account in Upbound Cloud
+Managed Control Planes can run on Upbound's cloud infrastructure. They provide a restricted
+Kubernetes API endpoint that can be accessed via `kubectl` or continuous deployment systems.
 
-1. Sign up for [Upbound Cloud](https://cloud.upbound.io/register).
-1. When you first create an Upbound Account, you can create an Organization
+>You will need `kubectl` v1.23.5 (or higher) installed on your local worksation. Consult the Kubenetes docs for directions on installing `kubectl`
 
-#### Create a Hosted UXP Control Plane in Upbound Cloud
+#### 1. Create a Free Account in Upbound Cloud:
 
-Install the `up` cli:
+- Sign up for [Upbound Cloud](https://cloud.upbound.io/register).
 
-`up` is the official CLI for interacting with Upbound Cloud and Universal Crossplane (UXP).
+- In your browser, create a `Control Plane` in Upbound Cloud. Select `Hosted` and provide name (e.g. dev, staging, prod, etc.).
 
+#### 2. Install the `up` cli:
+
+>`up` is the official CLI for interacting with Upbound Cloud and Universal Crossplane (UXP).
 There are multiple ways to [install up cli](https://cloud.upbound.io/docs/cli/#install-script),
 including Homebrew and Linux packages.
 
 ```console
 curl -sL https://cli.upbound.io | sh
-
 up login
 ```
 
-1. Create a `Control Plane` in Upbound Cloud (e.g. dev, staging, or prod).
-1. Connect `kubectl` to your `Control Plane` instance.
-   * Click on your Control Plane
-   * Select the *Connect Using CLI*
-   * Paste the commands to configure your local `kubectl` context
-   * Test your connectivity by running `kubectl get pods -n upbound-system`
-
-#### Installing UXP on a Kubernetes Cluster
-
-The other option is installing UXP into a Kubernetes cluster you manage using `up`, which
-is the official CLI for interacting with Upbound Cloud and Universal Crossplane (UXP).
-
-There are multiple ways to [install up cli](https://cloud.upbound.io/docs/cli/#install-script),
-including Homebrew and Linux packages.
-
-```console
-curl -sL https://cli.upbound.io | sh
-```
-
-Ensure that your kubectl context is pointing to the correct cluster:
-
-```console
-kubectl config current-context
-```
-
-Install UXP into the `upbound-system` namespace:
-
-```console
-up uxp install
-```
-
-Validate the install using the following command:
-
-```console
-kubectl get all -n upbound-system
-```
-
-#### Install the Crossplane kubectl extension (for convenience)
-
-Now that your kubectl context is configured to connect to a UXP Control Plane,
-we can install this reference platform as a Crossplane package.
+#### 3. Install the Crossplane kubectl extension (for convenience):
 
 ```console
 curl -sL https://raw.githubusercontent.com/crossplane/crossplane/master/install.sh | sh
 cp kubectl-crossplane /usr/local/bin
 ```
 
-#### Install the Platform Configuration
+#### 4. Connect `kubectl` to your `Control Plane` instance:
+   * Click on your Control Plane
+   * Select the *Connect Using CLI*
+   * Paste the commands to configure your local `kubectl` context
+   * Test your connectivity by running `kubectl get pods -n upbound-system`
+
+### Install the Platform Configuration
+
+>This will install the Configuration (XRDs, Compositions, and the required Providers). See [Create Your Own Configuration](#Create-Your_Own-Configuration) after this quick start create your own.
+
+#### 1. Set local variables and install Configuration
 
 ```console
-# Check the latest version available in https://cloud.upbound.io/registry/upbound/platform-ref-azure
-PLATFORM_VERSION=v0.1.0
+PLATFORM_VERSION=v0.3.0
 PLATFORM_CONFIG=registry.upbound.io/upbound/platform-ref-azure:${PLATFORM_VERSION}
 
 kubectl crossplane install configuration ${PLATFORM_CONFIG}
+
 kubectl get pkg
 ```
 
-#### Configure Providers in your Platform
+### Create credential data required to configure Provider for Azure:
 
-A `ProviderConfig` is used to configure Cloud Provider API credentials. Multiple
-`ProviderConfig`s can be created, each one pointing to a different credential.
+>In order to manage resources in Azure, you must provide credentials for an Azure service principal that Crossplane can use to authenticate. This assumes that you have already set up the Azure CLI client with your Azure credentials.
 
-In order to manage resources in Azure, you must provide credentials for an Azure service principal that Crossplane can use to authenticate. This assumes that you have already set up the Azure CLI client with your credentials.
-
-Create a JSON file that contains all the information needed to connect and authenticate to Azure:
+#### 1. Create a JSON file that contains all the information needed to connect and authenticate to Azure:
 
 ```console
 # Create service principal with Owner role
 az ad sp create-for-rbac --sdk-auth --role Owner --name platform-ref-azure > crossplane-azure-provider-key.json
 ```
 
-Take note of the `clientID` value from the JSON file that we just created, and save it to an environment variable:
+#### 2. Use the `clientID` value from the JSON file we just created, and save it to an environment variable:
 
 ```console
 export AZURE_CLIENT_ID=<clientId value from json file>
 ```
 
-Now add and grant the required permissions to the service principal that will allow it to manage the necessary resources in Azure:
+#### 3. Grant required permissions to the service principal that will allow it to manage the necessary resources in Azure:
 
 ```console
 # add required Azure Active Directory permissions
@@ -191,86 +154,128 @@ az ad app permission add --id ${AZURE_CLIENT_ID} --api 00000002-0000-0000-c000-0
 az ad app permission grant --id ${AZURE_CLIENT_ID} --api 00000002-0000-0000-c000-000000000000 --expires never
 ```
 
-You might see an error similar to the following, but that is OK, the permissions should have gone through still:
-
+>You might see an error similar to the following, but that is OK, the permissions should have gone through still:
 _Operation failed with status: 'Conflict'. Details: 409 Client Error: Conflict for url: https://graph.windows.net/e7985bc4-a3b3-4f37-b9d2-fa256023b1ae/oauth2PermissionGrants?api-version=1.6_
 
-Finally, you need to grant admin permissions on the Azure Active Directory to the service principal because it will need to create other service principals for your AKSCluster:
+#### 4. Grant admin permissions on the Azure Active Directory to the service principal:
 
 ```console
 # grant admin consent to the service princinpal you created
 az ad app permission admin-consent --id "${AZURE_CLIENT_ID}"
 ```
 
-_Note: You might need Global Administrator role to Grant admin consent for Default Directory. Please contact the administrator of your Azure subscription. To check your role, go to Azure Active Directory -> Roles and administrators. You can find your role(s) by clicking on Your Role (Preview)_
+>_You might need Global Administrator role to Grant admin consent for Default Directory. Please contact the administrator of your Azure subscription. To check your role, go to Azure Active Directory -> Roles and administrators. You can find your role(s) by clicking on Your Role (Preview)_
 
 After these steps are completed, you should have the following file on your local filesystem:
 
 - crossplane-azure-provider-key.json
 
-#### Setup Azure ProviderConfig
+### Setup Azure ProviderConfig
 
-Before creating any resources, we need to create and configure an Azure cloud provider resource in Crossplane, which stores the cloud account information in it. All the requests from Crossplane to Azure Cloud will use the credentials attached to this provider resource. The following command assumes that you have a crossplane-azure-provider-key.json file that belongs to the account you’d like Crossplane to use.
+>Now we’ll create the Secret that contains the credential data and the ProviderConfig that uses to the secret:
 
-Now we’ll create our Secret that contains the credential and ProviderConfig resource that refers to that secret:
+#### 1. Create Secret
 
 ```console
 kubectl create secret generic azure-account-creds -n upbound-system --from-file=credentials=./crossplane-azure-provider-key.json
-kubectl apply -f examples/azure-default-provider.yaml
+
+rm ./crossplane-azure-provider-key.json
 ```
 
-The output will look like the following:
+#### 2. Create ProviderConfig
+
+```shell
+kubectl create -f examples/azure-default-provider.yaml
+```
+
+>The output will look like the following:
 
 ```shell
 provider.azure.crossplane.io/default created
 ```
 
-Crossplane resources use the ProviderConfig named ```default``` if no specific ProviderConfig is specified, so this ProviderConfig will be the default for all Azure resources.
+>Crossplane resources use the ProviderConfig named `default` if no specific ProviderConfig is specified, so this ProviderConfig will be the default for all Azure resources. Each type of Provider can have a `default` instance in the Crossplane cluster.
 
-### We are now ready to provision resources:
+### Provision Resources
 
-#### Create AKS Cluster
+#### 1. Create AKS Cluster
 
-The example cluster compposition creates an AKS cluster and includes a nested composite resource for the network, which creates a Resource Group, Virtual Network, and Subnet:
+>The example cluster compposition creates an AKS cluster and includes a nested composite resource for the network, which creates a Resource Group, Virtual Network, and Subnets.
 
-```console
-kubectl apply -f examples/cluster.yaml
-```
-
-verify status:
+Create the Recource Group, Networking, and AKS cluster:
 
 ```console
-kubectl get claim
-kubectl get composite
-kubectl get managed
+kubectl apply -f examples/cluster-claim.yaml
 ```
 
 >_Note: you may see an error similar to this during AKS cluster provisioning: `Error: autorest/azure: Service returned an error. Status=409 Code="RoleAssignmentExists" Message="The role assignment already exists.` This is due to a known issue with the Azure API. The AKS cluster should succesfully provision after Crossplane iterates the reconcile loop a few times._
 
-#### Provision a PostgreSQLInstance using kubectl
+#### 2. Create an Azure Database Service for MariaDB
 
 ```console
-kubectl apply -f examples/postgres-claim.yaml
+kubectl apply -f examples/db-srv-claim.yaml
 ```
 
-Verify status:
+#### 3. Verify the Cluster and Databae become ready (This can take 10-20 minutes):
 
 ```console
 kubectl get claim
 kubectl get composite
 kubectl get managed
 ```
-Check your Azure Cloud portal to verify your infrastructure is created. Try changing the CIDR for the subnet and see if it is reconciled to intended state.
+Check your Azure Cloud portal to verify your infrastructure is created.
 
-### Cleanup & Uninstall
+#### 4. Create applications that consume the above infrastructure
 
-#### Cleanup Resources
+```console
+kubectl apply -f examples/wordpress1-claim.yaml
+
+kubectl apply -f examples/wordpress2-claim.yaml
+```
+
+#### 5. Verify the Wordpress charts are ready:
+
+```console
+kubectl get claim
+kubectl get composite
+kubectl get managed
+```
+
+#### 6. Retrieve the Kubeconfig for yor AKS cluster and  retrieve the Loadbalancer addresses of your Wordpress sites:
+
+```console
+kubectl get secret platform-ref-azure-akscluster -o jsonpath='{.data.kubeconfig}' | base64 -d > akskc
+
+kubectl --kubeconfig=akskc get svc -n A
+```
+
+Open the public addresses for the two Worpdress LoadBalancer Services in your browser.
+
+###  Cleanup
+
+#### 1. Delete applications
 
 Delete resources created through the `Control Plane` Configurations menu:
 
 ```console
-kubectl delete -f examples/postgres-claim.yaml
-kubectl delete -f examples/cluster.yaml
+kubectl delete -f examples/wordpress1-claim.yaml
+
+kubectl delete -f examples/wordpress2-claim.yaml.yaml
+```
+Wait until the Wordpress Release resources are completely removed before proceeding.
+
+```console
+kubectl get managed
+```
+
+#### 2. Delete database server and cluster
+
+Once the two Wordpress Release deletions are are completed, proceed.
+
+```console
+kubectl delete -f examples/db-claim.yaml
+
+kubectl delete -f examples/cluster-claim.yaml
 ```
 
 Verify all underlying resources have been cleanly deleted:
@@ -279,103 +284,38 @@ Verify all underlying resources have been cleanly deleted:
 kubectl get managed
 ```
 
-#### Uninstall Provider & Platform Configuration
+#### 3. Uninstall Provider & Platform Configuration
 
 ```console
 kubectl delete configuration.pkg.crossplane.io upbound-platform-ref-azure
+
 kubectl delete provider.pkg.crossplane.io crossplane-provider-azure
+
 kubectl delete provider.pkg.crossplane.io crossplane-provider-helm
 ```
 
-### Uninstall Azure App Registration
+#### 4. Uninstall Azure App Registration
 
-_Note: If you plan to continue testing with the Azure provider, perform this cleanup step later_
+>_Note: If you plan to continue testing with the Azure provider, perform this cleanup step later_
 
 ```console
 AZ_APP_ID=$(az ad sp list --display-name platform-ref-azure)
+
 az ad sp delete --id $AZ_APP_ID
 ```
 
-## APIs in this Configuration
-
-* `Cluster` - provision a fully configured AKS cluster
-  * [definition.yaml](cluster/definition.yaml)
-  * [composition.yaml](cluster/composition.yaml) includes (transitively):
-    * `XAKS` for AKS cluster.
-    * `XNetwork` for network fabric.
-    * `XServices` for Prometheus and other cluster services.
-* `XAKS` Creates AKS cluster.
-  * [definition.yaml](cluster/aks/definition.yaml)
-  * [composition.yaml](cluster/aks/composition.yaml) includes:
-    * `AKSCluster` for Azure AKS cluster.
-* `XNetwork` - fabric for a `Cluster` to securely connect to Data Services and
-  the Internet.
-  * [definition.yaml](cluster/network/definition.yaml)
-  * [composition.yaml](cluster/network/composition.yaml) includes:
-      * `ResourceGroup` Azure API.
-      * `VirtualNetwork` Azure API.
-      * `Subnet` Azure API.
-* `XServices`
-  * [definition.yaml](cluster/services/definition.yaml)
-  * [composition.yaml](cluster/services/composition.yaml) includes:
-    * `Release` Install Prometheus with the Helm provider Release API
-* `PostgreSQLInstance` - provision an Azure Database for PostgreSQL instance that securely connects to a 
-  * [definition.yaml](database/postgres/definition.yaml)
-  * [composition.yaml](database/postgres/composition.yaml) includes:
-    * `PostgreSQLServer`
-    * `PostgreSQLServerVirtualNetworkRule`
-
-## Customize for your Organization
-
-Create a `Repository` called `platform-ref-azure` in your Upbound Cloud `Organization`:
-
-![](docs/media/repository-empty.png)
-
-<br>
-
-Set these to match your settings:
-
-```console
-UPBOUND_ORG=acme
-UPBOUND_ACCOUNT_EMAIL=me@acme.com
-REPO=platform-ref-azure
-VERSION_TAG=v0.1.0
-REGISTRY=registry.upbound.io
-PLATFORM_CONFIG=${REGISTRY:+$REGISTRY/}${UPBOUND_ORG}/${REPO}:${VERSION_TAG}
-```
-
-Login to your container registry. _(Your password is the same as Upbound Cloud login.)_
-
-```console
-docker login ${REGISTRY} -u ${UPBOUND_ACCOUNT_EMAIL}
-```
-
-Build package.
-
-```console
-up xpkg build --name platform-ref-azure.xpkg --ignore ".github/workflows/*,examples/*,hack/*" 
-```
-
-Push package to registry.
-
-```console
-up xpkg push ${PLATFORM_CONFIG} -f platform-ref-azure.xpkg
-```
-
-![](docs/media/pushToRepo.png)
-
+## Learn More
 
 The Azure cloud service primitives that can be used in a `Composition` today are
-listed in the [Crossplane Azure Provider
-Docs](https://doc.crds.dev/github.com/crossplane/provider-azure).
+listed in the [Crossplane Azure Jet Provider
+Docs](https://doc.crds.dev/github.com/crossplane-contrib/provider-jet-azure).
 
-To learn more see [Configuration
-Packages](https://crossplane.io/docs/v0.13/getting-started/package-infrastructure.html).
+To learn more about creating and publishing your own Configuration Packages, see [Configuration
+Packages](https://crossplane.io/docs/v1.7/concepts/packages.html).
 
-## What's Next
+### What's Next
 
 If you're interested in building your own reference platform for your company,
 we'd love to hear from you and chat. You can setup some time with us at
 info@upbound.io.
 
-For Crossplane questions, drop by [slack.crossplane.io](https://slack.crossplane.io), and say hi!

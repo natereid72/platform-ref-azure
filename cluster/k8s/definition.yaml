@@ -7,8 +7,6 @@ spec:
   names:
     kind: XAKS
     plural: xaks
-  connectionSecretKeys:
-  - kubeconfig
   versions:
   - name: v1alpha1
     served: true

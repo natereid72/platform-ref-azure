@@ -1,0 +1,12 @@
+apiVersion: containerservice.azure.jet.crossplane.io/v1alpha2
+kind: KubernetesCluster
+metadata:
+  name: test
+spec:
+  forProvider:
+    location: East US 2
+    #kubernetesVersion: "" #If blank, uses regions's default version
+    defaultNodePool:
+      - name: default
+        nodeCount: 1
+        vmSize: Standard_B2s

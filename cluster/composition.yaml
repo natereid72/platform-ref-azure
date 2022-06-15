@@ -30,11 +30,10 @@ spec:
         - fromFieldPath: spec.parameters.nodes.size
           toFieldPath: spec.parameters.nodes.size
     - base:
-        apiVersion: azure.platformref.crossplane.io/v1alpha1
-        kind: XServices
+        apiVersion: charts.azure.platformref.crossplane.io/v1alpha1
+        kind: XPrometheus
+      name: clusterPrometheus
       patches:
-        - fromFieldPath: spec.id
-          toFieldPath: metadata.name
         - fromFieldPath: spec.id
           toFieldPath: spec.providerConfigRef.name
         - fromFieldPath: spec.parameters.services.operators.prometheus.version

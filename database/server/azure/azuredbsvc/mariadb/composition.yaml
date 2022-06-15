@@ -1,43 +1,46 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xpostgresqlinstances.azure.platformref.crossplane.io
+  name: xmariadbinstances.db.platformref.crossplane.io
   labels:
-    provider: azure
+    cloud: azure
 spec:
   compositeTypeRef:
-    apiVersion: azure.platformref.crossplane.io/v1alpha1
-    kind: XPostgreSQLInstance
+    apiVersion: db.platformref.crossplane.io/v1alpha1
+    kind: XSQLSrv
   resources:
-  - name: postgresqlserver
-    base:
-      apiVersion: database.azure.crossplane.io/v1beta1
-      kind: PostgreSQLServer
+  - base:
+      apiVersion: dbformariadb.azure.jet.crossplane.io/v1alpha1
+      kind: Server
       spec:
         forProvider:
-          version: "11"
+          name: mariadb-server # patched
+          version: "10.3"
           administratorLogin: myadmin
-          location: West US 2
+          location: East US 2
           sslEnforcement: Disabled
-          storageProfile:
-              storageMB: 5120
-          sku:
-            tier: GeneralPurpose
-            capacity: 2
-            family: Gen5  
+          storageMb: 5120 # patched
+          skuName: "B_Gen5_2"
+    name: mariadbserver
     patches:
     - fromFieldPath: spec.parameters.clusterRef.id
       toFieldPath: metadata.name
       transforms:
         - type: string
           string:
-            fmt: "%s-postgresql"
+            fmt: "%s-mariadb" 
+    # - fromFieldPath: spec.parameters.clusterRef.id
+    #   toFieldPath: spec.forProvider.name
+    #   transforms:
+    #     - type: string
+    #       string:
+    #         fmt: "%s-mariadb"
     - fromFieldPath: spec.parameters.clusterRef.id
       toFieldPath: metadata.annotations[crossplane.io/external-name]
       transforms:
         - type: string
           string:
-            fmt: "%s-postgresql"
+            fmt: "%s-mariadb"
     - fromFieldPath: spec.claimRef.namespace
       toFieldPath: spec.writeConnectionSecretToRef.namespace
     - fromFieldPath: "spec.parameters.clusterRef.id"
@@ -45,9 +48,9 @@ spec:
       transforms:
       - type: string
         string:
-          fmt: "%s-postgresql"
+          fmt: "%s-mariadb"
     - fromFieldPath: "spec.parameters.storageGB"
-      toFieldPath: "spec.forProvider.storageProfile.storageMB"
+      toFieldPath: "spec.forProvider.storageMb"
       transforms:
       - type: math
         math:
@@ -62,14 +65,27 @@ spec:
   # db-server vnet-rule for subnet where AKS lives in
   - name: vnetrule
     base:
-      apiVersion: database.azure.crossplane.io/v1alpha3
-      kind: PostgreSQLServerVirtualNetworkRule
+      apiVersion: dbformariadb.azure.jet.crossplane.io/v1alpha1
+      kind: VirtualNetworkRule
       spec:
-        serverNameSelector:
-          matchControllerRef: true
+        forProvider:
+          name: mariadb #patched
+          serverName: mariadb #patched
     patches:
     - fromFieldPath: spec.parameters.clusterRef.id
       toFieldPath: metadata.name
+      transforms:
+      - type: string
+        string:
+          fmt: "%s-sn"
+    - fromFieldPath: spec.parameters.clusterRef.id
+      toFieldPath: spec.forProvider.serverName
+      transforms:
+        - type: string
+          string:
+            fmt: "%s-mariadb"
+    - fromFieldPath: spec.parameters.clusterRef.id
+      toFieldPath: spec.forProvider.name
       transforms:
         - type: string
           string:
@@ -81,6 +97,6 @@ spec:
           string:
             fmt: "%s-sn-rule"
     - fromFieldPath: spec.parameters.clusterRef.id
-      toFieldPath: spec.properties.virtualNetworkSubnetIdSelector.matchLabels[azure.platformref.crossplane.io/app]
+      toFieldPath: spec.forProvider.subnetIdSelector.matchLabels[azure.platformref.crossplane.io/app]
     - fromFieldPath: spec.parameters.clusterRef.id
-      toFieldPath: spec.resourceGroupNameSelector.matchLabels[azure.platformref.crossplane.io/app]
+      toFieldPath: spec.forProvider.resourceGroupNameSelector.matchLabels[azure.platformref.crossplane.io/app]

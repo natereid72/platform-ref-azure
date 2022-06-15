@@ -1,0 +1,6 @@
+apiVersion: charts.azure.platformref.crossplane.io/v1alpha1
+kind: XWordpress
+spec:
+  chart:
+    version:  "13.1.15"
+

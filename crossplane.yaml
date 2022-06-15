@@ -44,7 +44,7 @@ metadata:
     friendly-kind-name.meta.crossplane.io/compositecluster.azure.platformref.crossplane.io: Composite Kubernetes Cluster
     friendly-kind-name.meta.crossplane.io/cluster.azure.platformref.crossplane.io: Kubernetes Cluster
 
-    friendly-kind-name.meta.crossplane.io/services.azure.platformref.crossplane.io: Cluster Services
+    friendly-kind-name.meta.crossplane.io/charts.azure.platformref.crossplane.io: Cluster Charts
     friendly-kind-name.meta.crossplane.io/aks.azure.platformref.crossplane.io: AKS Cluster
 
     # TODO(negz): Remove these older style annotations once annotation consumers
@@ -89,7 +89,7 @@ spec:
   crossplane:
     version: ">=v1.0.0-0"
   dependsOn:
-    - provider: registry.upbound.io/crossplane/provider-azure
-      version: ">=v0.18.1-0"
     - provider: registry.upbound.io/crossplane/provider-helm
       version: ">=v0.9.0"
+    - provider: crossplane/provider-jet-azure
+      version: "0.9.0-preview"

@@ -1,20 +1,33 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xaks.azure.platformref.crossplane.io
+  name: xaks.k8s.platformref.crossplane.io
   labels:
-    provider: azure
+    cloud: azure
 spec:
   compositeTypeRef:
-    apiVersion: azure.platformref.crossplane.io/v1alpha1
-    kind: XAKS
+    apiVersion: platformref.crossplane.io/v1alpha1
+    kind: XK8s
   resources:
+  # Create AKS Cluster and output kubeconfig to secret
     - base:
-        apiVersion: compute.azure.crossplane.io/v1alpha3
-        kind: AKSCluster
+        apiVersion: containerservice.azure.jet.crossplane.io/v1alpha2
+        kind: KubernetesCluster       
         spec:
-          location: West US 2
-          version: "1.21.2"
+          forProvider:
+            location: East US 2
+            #kubernetesVersion: "" #If remarked out or ommitted, uses regions's default Kubernetes version. 
+            defaultNodePool:
+              - name: default
+                nodeCount: #patched
+                vmSize: #patched
+            identity:
+              - type: "SystemAssigned"
+      # Patches take values from the XR and compose them into the MR. Patches assign values to the 
+      # composed MR. In this case, we assign name and external-name with a transform, labels or selctors 
+      # to refer to, values to the select resource group and network, AKS DNS prefix, Node size wtih a map 
+      # to VM type, node count, and where to place and what to call the secret that will hold the AKS cluster 
+      # kubeconfig.
       patches:
         - fromFieldPath: spec.id
           toFieldPath: metadata.name
@@ -29,13 +42,13 @@ spec:
               string:
                 fmt: "%s-aks"
         - fromFieldPath: spec.id
-          toFieldPath: spec.resourceGroupNameSelector.matchLabels[azure.platformref.crossplane.io/app]
+          toFieldPath: spec.forProvider.resourceGroupNameSelector.matchLabels[azure.platformref.crossplane.io/app]
         - fromFieldPath: spec.id
-          toFieldPath: spec.vnetSubnetIDSelector.matchLabels[azure.platformref.crossplane.io/app]
+          toFieldPath: spec.forProvider.defaultNodePool[0].vnetSubnetIDSelector.matchLabels[azure.platformref.crossplane.io/app]
         - fromFieldPath: spec.id
-          toFieldPath: spec.dnsNamePrefix
-        - fromFieldPath: spec.parameters.nodes.size
-          toFieldPath: spec.nodeVMSize
+          toFieldPath: spec.forProvider.dnsPrefix
+        - fromFieldPath: spec.parameters.node.size
+          toFieldPath: spec.forProvider.defaultNodePool[0].vmSize
           transforms:
             - type: map
               map:
@@ -43,7 +56,7 @@ spec:
                 medium: Standard_B4ms
                 large: Standard_B8ms
         - fromFieldPath: "spec.parameters.nodes.count"
-          toFieldPath: "spec.nodeCount"
+          toFieldPath: "spec.forProvider.defaultNodePool[0].nodeCount"
         - fromFieldPath: spec.writeConnectionSecretToRef.namespace
           toFieldPath: spec.writeConnectionSecretToRef.namespace
         - fromFieldPath: spec.writeConnectionSecretToRef.name
@@ -51,9 +64,8 @@ spec:
           transforms:
             - type: string
               string:
-                fmt: "%s-aks"
-      connectionDetails:
-        - fromConnectionSecretKey: kubeconfig
+                fmt: "%s-akscluster"
+    # Creating Helm Provider Config for the cluster, using the cluster's connection kubeconfig secret.
     - base:
         apiVersion: helm.crossplane.io/v1beta1
         kind: ProviderConfig
@@ -67,13 +79,11 @@ spec:
           toFieldPath: metadata.name
         - fromFieldPath: spec.writeConnectionSecretToRef.namespace
           toFieldPath: spec.credentials.secretRef.namespace
-        # This ProviderConfig uses the above AKS cluster's connection secret as
-        # its credentials secret.
         - fromFieldPath: spec.writeConnectionSecretToRef.name
           toFieldPath: spec.credentials.secretRef.name
           transforms:
             - type: string
               string:
-                fmt: "%s-aks"
+                fmt: "%s-helm"
       readinessChecks:
         - type: None

@@ -1,20 +1,21 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xnetworks.azure.platformref.crossplane.io
+  name: azure.xnetworks.azure.platformref.crossplane.io
   labels:
-    provider: azure
+    cloud: azure
 spec:
   compositeTypeRef:
-    apiVersion: azure.platformref.crossplane.io/v1alpha1
+    apiVersion: platformref.crossplane.io/v1alpha1
     kind: XNetwork
   resources:
-  - base:
-      apiVersion: azure.crossplane.io/v1alpha3
-      kind: ResourceGroup
-      spec:
-        location: West US 2
-    patches:
+    - base:
+        apiVersion: azure.jet.crossplane.io/v1alpha2
+        kind: ResourceGroup
+        spec:
+          forProvider:
+            location: East US 2
+      patches:
       - fromFieldPath: spec.id
         toFieldPath: metadata.name
         transforms:
@@ -29,17 +30,16 @@ spec:
               fmt: "%s-rg"
       - fromFieldPath: spec.id
         toFieldPath: metadata.labels[azure.platformref.crossplane.io/app]
-  - base:
-      apiVersion: network.azure.crossplane.io/v1alpha3
-      kind: VirtualNetwork
-      spec:
-        resourceGroupNameSelector:
-          matchControllerRef: true
-        location: West US 2
-        properties:
-          addressSpace:
-            addressPrefixes: ['192.168.0.0/16']
-    patches:
+    - base:
+        apiVersion: network.azure.jet.crossplane.io/v1alpha2
+        kind: VirtualNetwork
+        spec:
+          forProvider:
+            resourceGroupNameSelector:
+              matchControllerRef: true
+            location: East US 2
+            addressSpace: ['192.168.0.0/16']
+      patches:
       - fromFieldPath: spec.id
         toFieldPath: metadata.labels[app]
       - fromFieldPath: spec.id
@@ -54,19 +54,19 @@ spec:
           - type: string
             string:
               fmt: "%s-vnet"
-  - base:
-      apiVersion: network.azure.crossplane.io/v1alpha3
-      kind: Subnet
-      spec:
-        resourceGroupNameSelector:
-          matchControllerRef: true
-        virtualNetworkNameSelector:
-          matchControllerRef: true
-        properties:
-          addressPrefix: '192.168.1.0/24'
-          serviceEndpoints:
-            - service: Microsoft.Sql
-    patches:
+    - base:
+        apiVersion: network.azure.jet.crossplane.io/v1alpha2
+        kind: Subnet
+        spec:
+          forProvider:
+            resourceGroupNameSelector:
+              matchControllerRef: true
+            virtualNetworkNameSelector:
+              matchControllerRef: true
+            addressPrefixes: 
+              - "192.168.1.0/24"
+            serviceEndpoints: ["Microsoft.Sql"]
+      patches:
       - fromFieldPath: spec.id
         toFieldPath: metadata.labels[azure.platformref.crossplane.io/app]
       - fromFieldPath: spec.id

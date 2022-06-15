@@ -1,0 +1,8 @@
+mariadb:
+  enabled: false
+externalDatabase:
+  create: true
+  database: nate
+  host: platform-ref-azure-postgresql.mysql.database.azure.com
+  user: myadmin@platform-ref-azure-postgresql
+  password: qgYoeW7yvfSPibkibjFwCaiD9Ju
