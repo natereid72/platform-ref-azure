@@ -10,7 +10,7 @@ spec:
     kind: XNetwork
   resources:
     - base:
-        apiVersion: azure.jet.crossplane.io/v1alpha2
+        apiVersion: azure.upbound.io/v1beta1
         kind: ResourceGroup
         spec:
           forProvider:
@@ -31,7 +31,7 @@ spec:
       - fromFieldPath: spec.id
         toFieldPath: metadata.labels[azure.platformref.crossplane.io/app]
     - base:
-        apiVersion: network.azure.jet.crossplane.io/v1alpha2
+        apiVersion: network.azure.upbound.io/v1beta1
         kind: VirtualNetwork
         spec:
           forProvider:
@@ -55,7 +55,7 @@ spec:
             string:
               fmt: "%s-vnet"
     - base:
-        apiVersion: network.azure.jet.crossplane.io/v1alpha2
+        apiVersion: network.azure.upbound.io/v1beta1
         kind: Subnet
         spec:
           forProvider:

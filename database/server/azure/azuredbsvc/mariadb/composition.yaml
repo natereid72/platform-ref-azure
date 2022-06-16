@@ -10,7 +10,7 @@ spec:
     kind: XSQLSrv
   resources:
   - base:
-      apiVersion: dbformariadb.azure.jet.crossplane.io/v1alpha1
+      apiVersion: dbformariadb.azure.upbound.io/v1alpha1
       kind: Server
       spec:
         forProvider:
@@ -65,7 +65,7 @@ spec:
   # db-server vnet-rule for subnet where AKS lives in
   - name: vnetrule
     base:
-      apiVersion: dbformariadb.azure.jet.crossplane.io/v1alpha1
+      apiVersion: dbformariadb.azure.upbound.io/v1alpha1
       kind: VirtualNetworkRule
       spec:
         forProvider:

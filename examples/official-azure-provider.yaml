@@ -1,0 +1,8 @@
+apiVersion: pkg.crossplane.io/v1
+kind: Provider
+metadata:
+  name: provider-azure-official
+spec:
+  package: xpkg.upbound.io/upbound/provider-azure-staging:v0.1.0
+  packagePullSecrets:
+    - name: official-pull-secret

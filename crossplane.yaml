@@ -93,5 +93,5 @@ spec:
   dependsOn:
     - provider: registry.upbound.io/crossplane/provider-helm
       version: ">=v0.9.0"
-    - provider: crossplane/provider-jet-azure
-      version: "v0.10.0-preview"
+    - provider: xpkg.upbound.io/upbound/provider-azure-staging
+      version: ">=v0.1.0"
