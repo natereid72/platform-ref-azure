@@ -1,8 +1,0 @@
-apiVersion: pkg.crossplane.io/v1
-kind: Provider
-metadata:
-  name: provider-gcp-official
-spec:
-  package: xpkg.upbound.io/upbound/provider-gcp-staging:v0.3.0
-  packagePullSecrets:
-    - name: official-pull-secret

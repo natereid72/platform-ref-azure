@@ -16,8 +16,6 @@ spec:
     # server to be available. The DB server is provisioned via the database 
     # claim.
     #- base:
-
-
     ### Deploy Wordpress chart securely connected to external database.
     - base:
         apiVersion: helm.crossplane.io/v1beta1
@@ -39,6 +37,8 @@ spec:
               repository: https://charts.bitnami.com/bitnami
               version: "13.1.15" # patched
             values:
+              service:
+                type: clusterIP
               persistence:
                 enabled: false
               mariadb:
