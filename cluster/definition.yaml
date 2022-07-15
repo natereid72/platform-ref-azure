@@ -13,9 +13,9 @@ metadata:
           controlType: singleInput
           type: string
           path: ".spec.id"
-          title: Cluster Ref Name
+          title: Cluster ID
           description: Cluster ID that other objects will use to refer to this cluster
-          default: platform-ref-azure
+          default: platform-ref-aws
           validation:
           - required: true
             customError: Cluster ID is required.
@@ -25,7 +25,7 @@ metadata:
           path: ".spec.writeConnectionSecretToRef.name"
           title: Connection Secret Ref
           description: name of the secret to write to this namespace
-          default: cluster-conn
+          default: platform-ref-aws-kubeconfig
           validation:
           - required: true
       - title: Cluster Nodes
@@ -56,13 +56,13 @@ metadata:
           validation:
           - required: true
             customError: Node size is required.
-      - title: Cluster Charts
-        description: Configure cluster charts and operators
+      - title: Cluster Services
+        description: Configure cluster services and operators
         items:
         - name: promVersion
           controlType: singleInput
           type: string
-          path: ".spec.parameters.charts.operators.prometheus.version"
+          path: ".spec.parameters.services.operators.prometheus.version"
           title: Prometheus Chart Version
           description: The version of kube-prometheus-stack chart to install
           default: 15.0.1
@@ -114,24 +114,9 @@ spec:
                     required:
                     - count
                     - size
-                  charts:
-                    type: object
-                    description: Cluster node configuration parameters.
-                    properties:
-                      wordpress:
-                            type: object
-                            description: Configuration for the Prometheus operator.
-                            properties:
-                              version:
-                                type: string
-                                description: Prometheus operator version to run.
-                            required:
-                            - version
-                    required:
-                    - wordpress   
                 required:
                 - nodes
-                - charts
             required:
             - id
+            - cloud
             - parameters

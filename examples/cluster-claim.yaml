@@ -1,15 +1,11 @@
 apiVersion: platformref.crossplane.io/v1alpha1
 kind: Cluster
 metadata:
-  name: nate-platform-ref-azure
+  name: platform-ref-azure
 spec:
-  id: nate-platform-ref-azure
+  id: platform-ref-azure
   parameters:
     nodes:
-      count: 1 #1-100
-      size: small #small/medium/large
-    charts:
-      wordpress:
-        version: "13.1.15"
+      count: 1
+      size: small
   cloud: azure
-

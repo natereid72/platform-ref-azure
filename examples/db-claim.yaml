@@ -1,11 +1,12 @@
-apiVersion: azure.platformref.crossplane.io/v1alpha1
-kind: MariaDBInstance
+apiVersion: db.platformref.crossplane.io/v1alpha1
+kind: SQLSrv
 metadata:
-  name: platform-ref-azure-db
+  name: platform-ref-azure-db-srv
 spec:
   parameters:
-    storageGB: 5 #Minimum value is 5
+    storageGB: 5 # In the Comosition, we use a math transform to multiply this by 1024
     clusterRef:
-      id: platform-ref-azure #This field must match the cluster XR spec.id
-  writeConnectionSecretToRef:
-    name: platform-ref-azure-db-conn #Must be unique for each instance
+      id: platform-ref-azure # This is the unique name of the cluster that was provisioned
+  compositionSelector:
+    matchLabels:
+      cloud: azure

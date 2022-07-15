@@ -1,6 +1,11 @@
-apiVersion: charts.azure.platformref.crossplane.io/v1alpha1
-kind: XWordpress
+apiVersion: platformref.crossplane.io/v1alpha1
+kind: Chart
+metadata:
+ name: wordpress
 spec:
-  chart:
-    version:  "13.1.15"
-
+  id: wordpress
+  clusterRef: platform-ref-aws
+  version:  "13.1.15"
+  compositionSelector:
+    matchLabels:
+      chart: wordpress

@@ -1,7 +1,7 @@
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
-  name: xmariadbinstances.db.platformref.crossplane.io
+  name: azure.xsqlsrvs.db.platformref.crossplane.io
   labels:
     cloud: azure
 spec:
@@ -10,7 +10,7 @@ spec:
     kind: XSQLSrv
   resources:
   - base:
-      apiVersion: dbformariadb.azure.upbound.io/v1alpha1
+      apiVersion: dbformariadb.azure.upbound.io/v1beta1
       kind: Server
       spec:
         forProvider:
@@ -65,7 +65,7 @@ spec:
   # db-server vnet-rule for subnet where AKS lives in
   - name: vnetrule
     base:
-      apiVersion: dbformariadb.azure.upbound.io/v1alpha1
+      apiVersion: dbformariadb.azure.upbound.io/v1beta1
       kind: VirtualNetworkRule
       spec:
         forProvider:
