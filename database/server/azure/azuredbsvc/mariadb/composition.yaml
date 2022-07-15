@@ -14,13 +14,14 @@ spec:
       kind: Server
       spec:
         forProvider:
-          name: mariadb-server # patched
+          # name: mariadb-server # patched
           version: "10.3"
           administratorLogin: myadmin
           location: East US 2
           sslEnforcement: Disabled
           storageMb: 5120 # patched
           skuName: "B_Gen5_2"
+          sslEnforcementEnabled: false
     name: mariadbserver
     patches:
     - fromFieldPath: spec.parameters.clusterRef.id
