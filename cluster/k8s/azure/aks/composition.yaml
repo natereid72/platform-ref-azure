@@ -55,7 +55,7 @@ spec:
               map:
                 small: Standard_B2s
                 medium: Standard_B4ms
-                large: Standard_B8ms
+                large: Standard_DS3_v2
         - fromFieldPath: "spec.parameters.nodes.count"
           toFieldPath: "spec.forProvider.defaultNodePool[0].nodeCount"
         - fromFieldPath: spec.writeConnectionSecretToRef.namespace

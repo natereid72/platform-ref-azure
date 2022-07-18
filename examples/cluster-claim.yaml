@@ -7,5 +7,5 @@ spec:
   parameters:
     nodes:
       count: 1
-      size: small
+      size: large
   cloud: azure
